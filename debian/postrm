@@ -1,0 +1,20 @@
+#!/bin/sh
+
+#########################################################
+# Function :Clean application shell                     #
+# Platform :All Linux Based Platform                    #
+# Version  :0.0.1                                       #
+# Date     :2024-06-21                                  #
+# Author   :Cookie.Fei                                  #
+# Contact  :zhoufei@uniontech.com                       #
+# Company  :www.uniontech.com                           #
+#########################################################
+
+# echo uninstall info
+echo "deepin-app-analyze app uninstall clean config..."
+# clean app configuration path
+rm -fr /etc/deepin-app-analyze
+# clean app command
+rm -f /usr/local/bin/deepin-app-analyze
+# echo finished
+echo "deepin-app-analyze app uninstall complete."
