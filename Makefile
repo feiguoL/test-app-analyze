@@ -1,4 +1,6 @@
 # Definitions for values
+.PHONY: build clean tool lint help
+
 PACKAGE_NAME := deepin-app-analyze
 PACKAGE_VERSION := 0.0.1
 PACKAGE_MAINTAINER := Zhou Fei <zhoufei@uniontech.com>
@@ -29,7 +31,8 @@ BUILD_DIR := ${PWD}/buildpkgtest/${PACKAGE_NAME}-${PACKAGE_VERSION}
 
 # Build your project binary main file 
 build:  
-	@GOPATH=$(GOPATH) go build -ldflags "-s -w" -v -mod vendor -o ${PACKAGE_NAME} ${PWD}/main.go
+	@echo "[INFO]: compile packages with vwndor"
+	go build -ldflags "-s -w" -v -mod vendor -o ${PACKAGE_NAME} ${PWD}/main.go
 
 
 # Build deepin-app-analyze application package
@@ -52,10 +55,8 @@ clean:
 	rm -fr ${BUILD_DIR}
 	rm -rf ${DEBIAN_DIR_BASELINE}/*
 	rm -rf ${DEBIAN_DIR_SCRIPT}/*
+	rm -fr ${PACKAGE_NAME}
 
 # Uninstall the package
 uninstall: 
 	dpkg -r ${PACKAGE_NAME}
-
-
-.PHONY: build 
