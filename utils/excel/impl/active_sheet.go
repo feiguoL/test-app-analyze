@@ -5,6 +5,6 @@ func (e *excelImpl) SetActiveSheet(sheetIndex int) {
 	e.excelFile.SetActiveSheet(sheetIndex)
 }
 
-func (e *excelImpl) DeleteSheet(sheetName string) error {
-	return e.excelFile.DeleteSheet(sheetName)
+func (e *excelImpl) DeleteSheet(sheetName string) {
+	e.excelFile.DeleteSheet(sheetName)
 }

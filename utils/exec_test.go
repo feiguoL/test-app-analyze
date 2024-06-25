@@ -14,11 +14,7 @@ const (
 
 // 测试excel基本功能
 func Test_excelinit(t *testing.T) {
-	err = excel.ExcelImpl.NewExcelSheet(total)
-	if err != nil {
-		t.Error(err.Error())
-	}
-
+	excel.ExcelImpl.NewExcelSheet(total)
 	err = excel.ExcelImpl.TotalSheet(total, baseLineVersion, "com.postman.postman_10.24_amd64.deb ",
 		"10.24", "amd64", "92080298", "1", "4", "20")
 
@@ -26,10 +22,7 @@ func Test_excelinit(t *testing.T) {
 	if err != nil {
 		t.Error(err.Error())
 	}
-	err = excel.ExcelImpl.DeleteSheet("Sheet1")
-	if err != nil {
-		t.Error(err.Error())
-	}
+	excel.ExcelImpl.DeleteSheet("Sheet1")
 	err = excel.ExcelImpl.FirstLineInited(baseLineVersion)
 	if err != nil {
 		t.Error(err.Error())

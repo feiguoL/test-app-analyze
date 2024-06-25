@@ -1,7 +1,7 @@
 Source: deepin-app-analyze
 Section: utils
 Priority: optional
-Maintainer: Zhou Fei <zhoufei@uniontech.com>
+Maintainer: ZhouFei <zhoufei@uniontech.com>
 Build-Depends: debhelper (>= 9), 
     dh-golang, 
     golang-go

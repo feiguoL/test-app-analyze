@@ -65,6 +65,7 @@ System Arch:   | %s
 func ready_work_directory(fp string) (err error) {
 	fmt.Println("ready work directory...")
 	tempdir = fmt.Sprintf("%s%s/", common.WorkDir, utils.GetCurrentTimeStr())
+	fmt.Printf("temp dir: %s\n", tempdir)
 	if !utils.FileExist(tempdir) {
 		if !utils.FileMkdir(tempdir) {
 			return fmt.Errorf("%s dir: %s", common.MkdirError, tempdir)
@@ -112,14 +113,10 @@ func ldd_file_handle(fp string) []string {
 // excel的初始化总览数据
 func excel_handler(appexec int) error {
 	var baseline string
-	err := excel.ExcelImpl.NewExcelSheet(common.TotalSheet)
-	if err != nil {
-		return err
-	}
-	err = excel.ExcelImpl.DeleteSheet("Sheet1")
-	if err != nil {
-		return err
-	}
+	excel.ExcelImpl.NewExcelSheet(common.TotalSheet)
+
+	excel.ExcelImpl.DeleteSheet("Sheet1")
+
 	baseLineFiles, err := utils.FileWalkDir(common.BaseLineDir)
 	if err != nil {
 		return err
@@ -402,7 +399,7 @@ func libdo(wg *sync.WaitGroup, locso string, outso []string) {
 	subwg.Add(len(baselinefiles))
 	for _, baselinefile := range baselinefiles {
 		baseline_sheet := strings.ReplaceAll(path.Base(baselinefile), ".json", "")
-		_ = excel.ExcelImpl.NewExcelSheet(baseline_sheet)
+		excel.ExcelImpl.NewExcelSheet(baseline_sheet)
 		go diffabi(&subwg, baselinefile, locso, outso)
 	}
 	subwg.Wait()
@@ -469,8 +466,8 @@ func Appcheck(fp string) (err error) {
 		return
 	}
 	handle_file()
-	fmt.Println("App Analysis ABI Check Complete. The Report File Path: /home/uos/Downloads/test.xlsx")
 	excel.ExcelImpl.Save("/home/uos/Downloads/test.xlsx")
+	fmt.Println("App Analysis ABI Check Complete. The Report File Path: /home/uos/Downloads/test.xlsx")
 	excel.ExcelImpl.Close()
 	return
 }

@@ -60,26 +60,26 @@ func hslModel(c color.Color) color.Color {
 	return HSL{h, s, l}
 }
 
-// RGBToHSL converts an RGB triple to an HSL triple.
+// RGBToHSL converts an RGB triple to a HSL triple.
 func RGBToHSL(r, g, b uint8) (h, s, l float64) {
 	fR := float64(r) / 255
 	fG := float64(g) / 255
 	fB := float64(b) / 255
-	maxVal := math.Max(math.Max(fR, fG), fB)
-	minVal := math.Min(math.Min(fR, fG), fB)
-	l = (maxVal + minVal) / 2
-	if maxVal == minVal {
+	max := math.Max(math.Max(fR, fG), fB)
+	min := math.Min(math.Min(fR, fG), fB)
+	l = (max + min) / 2
+	if max == min {
 		// Achromatic.
 		h, s = 0, 0
 	} else {
 		// Chromatic.
-		d := maxVal - minVal
+		d := max - min
 		if l > 0.5 {
-			s = d / (2.0 - maxVal - minVal)
+			s = d / (2.0 - max - min)
 		} else {
-			s = d / (maxVal + minVal)
+			s = d / (max + min)
 		}
-		switch maxVal {
+		switch max {
 		case fR:
 			h = (fG - fB) / d
 			if fG < fB {
@@ -95,7 +95,7 @@ func RGBToHSL(r, g, b uint8) (h, s, l float64) {
 	return
 }
 
-// HSLToRGB converts an HSL triple to an RGB triple.
+// HSLToRGB converts an HSL triple to a RGB triple.
 func HSLToRGB(h, s, l float64) (r, g, b uint8) {
 	var fR, fG, fB float64
 	if s == 0 {

@@ -1,9 +1,8 @@
 package utils
 
 import (
+	"github.com/google/uuid"
 	"time"
-
-	"github.com/lytdev/go-mykit/guid"
 )
 
 const gotime = "2006-01-02T15:04:05"
@@ -15,5 +14,5 @@ func GetCurrentTimeStr() string {
 }
 
 func GetFastUuid() string {
-	return guid.FastUuid()
+	return uuid.New().String()
 }

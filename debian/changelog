@@ -2,4 +2,4 @@ deepin-app-analyze (0.0.1-1) unstable; urgency=medium
 
   * Initial release (Closes: #nnnn)  <nnnn is the bug number of your ITP>
 
- -- Zhou Fei <zhoufei@uniontech.com>  Fri, 21 Jun 2024 11:04:51 +0800
+ -- ZhouFei <zhoufei@uniontech.com>  Fri, 21 Jun 2024 11:04:51 +0800

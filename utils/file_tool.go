@@ -3,12 +3,10 @@ package utils
 import (
 	"deepin-app-analyze/common"
 	"fmt"
-	"io"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
-
-	"github.com/lytdev/go-mykit/gfile"
 )
 
 // @auth ut000198  (2024/06/17)
@@ -16,7 +14,11 @@ import (
 // @param fp文件路径
 // @return 返回判断结果 true or false
 func FileExist(fp string) bool {
-	return gfile.IsExist(fp)
+	if _, err := os.Stat(fp); os.IsNotExist(err) {
+		return false
+	} else {
+		return true
+	}
 }
 
 // @auth ut000198  (2024/06/17)
@@ -24,12 +26,16 @@ func FileExist(fp string) bool {
 // @param src源文件路径 dst目标目录路径
 // @return 返回判断结果 true or false
 func FileCopy(src, dst string) bool {
-	_, err := gfile.CopyFile(src, dst)
+	input, err := ioutil.ReadFile(src)
 	if err != nil {
-		fmt.Println("copy file to work dir error: ", err.Error())
 		return false
 	} else {
-		return true
+		err = ioutil.WriteFile(dst, input, 0644)
+		if err != nil {
+			return false
+		} else {
+			return true
+		}
 	}
 }
 
@@ -38,7 +44,7 @@ func FileCopy(src, dst string) bool {
 // @param fp文件目录路径
 // @return 返回判断结果 true or false
 func FileMkdir(fp string) bool {
-	err := gfile.MkdirAll(fp)
+	err := os.MkdirAll(fp, 0777)
 	if err != nil {
 		return false
 	} else {
@@ -56,7 +62,7 @@ func FileRead(fp string) ([]byte, error) {
 		return nil, err
 	}
 	defer info.Close()
-	data, err := io.ReadAll(info)
+	data, err := ioutil.ReadAll(info)
 	if err != nil {
 		return nil, err
 	}
