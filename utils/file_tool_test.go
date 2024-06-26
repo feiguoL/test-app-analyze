@@ -78,3 +78,9 @@ func Test_GetPackgeInfo(t *testing.T) {
 	}
 	t.Log(out.Name, out.Version, out.Arch, out.Size)
 }
+
+// 测试获取当前路径
+func Test_GetPWD(t *testing.T) {
+	out := utils.GetPWD()
+	t.Log(out)
+}

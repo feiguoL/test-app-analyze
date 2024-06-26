@@ -1,0 +1,14 @@
+#!/bin/bash 
+
+#########################################################
+# Function :check application shell                     #
+# Platform :All Linux Based Platform                    #
+# Version  :0.0.1                                       #
+# Date     :2024-06-25                                  #
+# Author   :Cookie.Fei                                  #
+# Contact  :zhoufei@uniontech.com                       #
+# Company  :www.uniontech.com                           #
+#########################################################
+
+
+app-analyze appcheck -f $1

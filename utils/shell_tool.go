@@ -70,7 +70,7 @@ func DecompressDeb(fp, dir string) error {
 	outs, err := RunCmd("dpkg", []string{"-x", fp, dir}, "")
 	if err != nil {
 		fmt.Println(outs)
-		return err
+		return fmt.Errorf("deb软件包解压失败请检查软件包是否符合上游格式错误：%v", err)
 	}
 	return err
 }
@@ -82,28 +82,28 @@ func DecompressDeb(fp, dir string) error {
 func LDDFile(fp string) ([]string, error) {
 	out, err := RunCmd("ldd", []string{fp}, "")
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("获取库文件数据异常文件: %s 错误：%v", fp, err)
 	}
 	return out, err
 }
 
-// @auth ut000198  (2024/06/19)
+// @auth ut000198  (2024/06/26)
 // @description 获取app执行文件列表方法
 // @param fp 执行的目录路径
 // @return 返回找到结果的列表
-func FindDebExecutNum(fp string) (int, error) {
+func FindDebExecutFile(fp string) ([]string, error) {
 	var args []string
 	args = append(args, "-c")
-	cmd := fmt.Sprintf(`find %s -type f -executable -exec file {} \; | grep "ELF 64-bit LSB executable"`, fp)
+	cmd := fmt.Sprintf(`find %s -type f -executable -exec file {} \; | grep "ELF 64-bit LSB.*executable" | awk -F':' '{print $1}'`, fp)
 	args = append(args, cmd)
 	outs, err := RunCmd("bash", args, fp)
 	if err != nil {
-		return 0, err
+		return nil, err
 	}
 	if Debug {
 		for _, line := range outs {
 			fmt.Println(line)
 		}
 	}
-	return len(outs), err
+	return outs, err
 }

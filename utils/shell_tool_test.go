@@ -56,7 +56,7 @@ func Test_DecompressDeb(t *testing.T) {
 
 // 测试查找deb执行文件数量
 func Test_FindDebExecutNum(t *testing.T) {
-	num, err := utils.FindDebExecutNum(workdir)
+	num, err := utils.FindDebExecutFile(workdir)
 	if err != nil {
 		t.Errorf("Failed to find deb execut number: %v", err)
 	}

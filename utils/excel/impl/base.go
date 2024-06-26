@@ -13,6 +13,35 @@ type excelImpl struct {
 	excelFile *excelize.File // 接口方法主体
 }
 
+// 标识红色边框
+func (e *excelImpl) GetRedColor() int {
+	styleId, _ := e.excelFile.NewStyle(&excelize.Style{
+		Border: []excelize.Border{
+			{
+				Type:  "right",
+				Color: "#FF0000",
+				Style: 2,
+			},
+			{
+				Type:  "left",
+				Color: "#FF0000",
+				Style: 2,
+			},
+			{
+				Type:  "top",
+				Color: "#FF0000",
+				Style: 2,
+			},
+			{
+				Type:  "bottom",
+				Color: "#FF0000",
+				Style: 2,
+			},
+		},
+	})
+	return styleId
+}
+
 // 初始化excel文件方法服务
 func NewExcelFileImpl() Service {
 	SheetIndex = make(map[string]int)

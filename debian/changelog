@@ -1,3 +1,9 @@
+deepin-app-analyze (0.0.1-2) unstable; urgency=medium
+
+  *  Modify excel field and save file path
+
+ -- ZhouFei <zhoufei@uniontech.com>  Wed, 26 Jun 2024 09:40:39 +0800
+
 deepin-app-analyze (0.0.1-1) unstable; urgency=medium
 
   * Initial release (Closes: #nnnn)  <nnnn is the bug number of your ITP>

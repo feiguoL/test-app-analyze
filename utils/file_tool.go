@@ -9,6 +9,14 @@ import (
 	"strings"
 )
 
+func GetPWD() string {
+	dir, err := os.Getwd()
+	if err != nil {
+		dir = "/tmp"
+	}
+	return dir
+}
+
 // @auth ut000198  (2024/06/17)
 // @description 判断文件目录是否存在
 // @param fp文件路径
@@ -97,7 +105,7 @@ func FileClean(path string) {
 	}
 }
 
-// @auth ut000198  (2024/06/18)
+// @auth ut000198  (2024/06/26)
 // @description 查询deb文件的包信息
 // @param path 文件目录路径
 // @return 包的基本信息
@@ -105,14 +113,19 @@ func PackageInfo(path string) (*common.PackageInfo, error) {
 	var pkg common.PackageInfo
 	fileinfo, err := os.Stat(path)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("文件信息获取异常: %v", err)
 	}
 	pkg.Size = fileinfo.Size()
 	pkg.Name = fileinfo.Name()
 	if pkg.Name != "" {
-		names := strings.Split(pkg.Name, "_")
-		pkg.Version = names[1]
-		pkg.Arch = strings.ReplaceAll(names[2], ".deb", "")
+		if strings.Contains(pkg.Name, "_") {
+			names := strings.Split(pkg.Name, "_")
+			pkg.Version = names[1]
+			pkg.Arch = strings.ReplaceAll(names[2], ".deb", "")
+		} else {
+			return nil, fmt.Errorf("软件包格式错误不符合上游规则：{name}_{version}_{arch}.deb")
+		}
+
 	}
 
 	return &pkg, nil

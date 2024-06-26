@@ -13,38 +13,46 @@ import (
 )
 
 const (
-	Yes = "yes"
-	No  = "no"
+	Yes = "Yes"
+	No  = "No"
 )
 
 var (
-	err         error  // 默认错误信息
-	arch        string // 架构名称
-	kernel      string // 内核名称
-	system      string // 系统名称
-	tempdir     string // 临时目录
-	tempdirfile string // 临时目录文件
-	applib      int    // app本地库文件数量
-	outlib      int    // app外部库文件数量
-	appexec     int    // app执行文件数量
-	debname     string // app包名称
-	debarch     string // app架构
-	debversion  string // app版本
-	debsize     int64  // app包大小
-	soNum       map[string]uint8
-	wg          sync.WaitGroup
-	mutex       sync.Mutex
+	err error // 默认错误信息
+	// 全局环境变量
+	GlobalTempDir     string              // 临时目录
+	GlobalTempDirFile string              // 临时目录文件
+	GlobalArch        string              // 架构名称
+	GlobalKernel      string              // 内核名称
+	GlobalSystem      string              // 系统名称
+	GlobalAppLib      int                 // app本地库文件数量
+	GlobalOutLib      int                 // app外部库文件数量
+	GlobalAppExe      int                 // app执行文件数量
+	GlobalDebName     string              // app包名称
+	GlobalDebArch     string              // app架构
+	GlobalDebVersion  string              // app版本
+	GlobalDebSize     int64               // app包大小
+	GlobalRick        string              // app兼容性风险
+	GlobalSoNum       map[string]uint8    // 库文件数量
+	GlobalRickMap     map[string]string   // 风险性与基线版本关联
+	GlobalLibInfos    map[string][]string // 文件与外部库的关联
 )
+
+func init() {
+	GlobalSoNum = make(map[string]uint8)
+	GlobalRickMap = make(map[string]string)
+	GlobalLibInfos = make(map[string][]string)
+}
 
 // 系统环境检查
 func environment_check() (err error) {
 	fmt.Println("environment checking...")
-	arch = utils.SystemArch()
-	kernel, err = utils.SystemkernelVersion()
+	GlobalArch = utils.SystemArch()
+	GlobalKernel, err = utils.SystemkernelVersion()
 	if err != nil {
 		fmt.Println("get system kernel version failed: ", err)
 	}
-	system, err = utils.SystemVersion()
+	GlobalSystem, err = utils.SystemVersion()
 	if err != nil {
 		fmt.Println("get system version failed: ", err)
 	}
@@ -53,8 +61,8 @@ System Name:   | %s
 System Kernel: | %s   
 System Arch:   | %s   
 ----------------------------------------
-`, system, kernel, arch)
-	if !common.ListContainersStr(arch, common.Archs) {
+`, GlobalSystem, GlobalKernel, GlobalArch)
+	if !common.ListContainersStr(GlobalArch, common.Archs) {
 		return fmt.Errorf(common.ArchError)
 	}
 	fmt.Println("environment check finished!")
@@ -64,32 +72,32 @@ System Arch:   | %s
 // 准备工作目录
 func ready_work_directory(fp string) (err error) {
 	fmt.Println("ready work directory...")
-	tempdir = fmt.Sprintf("%s%s/", common.WorkDir, utils.GetCurrentTimeStr())
-	fmt.Printf("temp dir: %s\n", tempdir)
-	if !utils.FileExist(tempdir) {
-		if !utils.FileMkdir(tempdir) {
-			return fmt.Errorf("%s dir: %s", common.MkdirError, tempdir)
+	GlobalTempDir = fmt.Sprintf("%s%s/", common.WorkDir, utils.GetCurrentTimeStr())
+	// fmt.Printf("temp dir: %s\n", GlobalTempDir)
+	if !utils.FileExist(GlobalTempDir) {
+		if !utils.FileMkdir(GlobalTempDir) {
+			return fmt.Errorf("%s dir: %s", common.MkdirError, GlobalTempDir)
 		}
 	}
-	tempdirfile = fmt.Sprintf("%s%s", tempdir, path.Base(fp))
-	if !utils.FileCopy(fp, tempdirfile) {
-		return fmt.Errorf("%s source: %s target: %s", common.CopyError, fp, tempdirfile)
+	GlobalTempDirFile = fmt.Sprintf("%s%s", GlobalTempDir, path.Base(fp))
+	if !utils.FileCopy(fp, GlobalTempDirFile) {
+		return fmt.Errorf("%s source: %s target: %s", common.CopyError, fp, GlobalTempDirFile)
 	}
-	pkg, err := utils.PackageInfo(tempdirfile)
+	pkg, err := utils.PackageInfo(GlobalTempDirFile)
 	if err != nil {
 		return fmt.Errorf("%s file: %v", common.FileInfoError, err)
 	}
-	debname = pkg.Name
-	debarch = pkg.Arch
-	debversion = pkg.Version
-	debsize = pkg.Size
+	GlobalDebName = pkg.Name
+	GlobalDebArch = pkg.Arch
+	GlobalDebVersion = pkg.Version
+	GlobalDebSize = pkg.Size
 	fmt.Printf(`----------------------------------------
 Package Name: 		| %s
 Package Arch: 		| %s
 Package Version: 	| %s
 Package Size: 		| %d
 ----------------------------------------
-`, debname, debarch, debversion, int(debsize))
+`, GlobalDebName, GlobalDebArch, GlobalDebVersion, int(GlobalDebSize))
 	fmt.Println("ready work directory finished!")
 	return
 }
@@ -98,23 +106,22 @@ Package Size: 		| %d
 func ldd_file_handle(fp string) []string {
 	outs, err := utils.LDDFile(fp)
 	if err != nil {
-		fmt.Println("ldd file error: ", err.Error())
+		fmt.Printf("ldd file error: %s %v", fp, err.Error())
 		return outs
 	}
 	for _, val := range outs {
-		fmt.Println(val)
+		// fmt.Println(val)
 		so := strings.Split(val, " ")
-		soNum[so[0]] += 1
+		GlobalSoNum[so[0]] += 1
 	}
-	outlib = len(soNum)
+	GlobalOutLib = len(GlobalSoNum)
 	return outs
 }
 
 // excel的初始化总览数据
-func excel_handler(appexec int) error {
+func excel_handler(GlobalAppExe int) error {
 	var baseline string
 	excel.ExcelImpl.NewExcelSheet(common.TotalSheet)
-
 	excel.ExcelImpl.DeleteSheet("Sheet1")
 
 	baseLineFiles, err := utils.FileWalkDir(common.BaseLineDir)
@@ -124,18 +131,19 @@ func excel_handler(appexec int) error {
 	for _, val := range baseLineFiles {
 		baseline += strings.ReplaceAll(path.Base(val), ".json", "") + " "
 	}
-	filesize := strconv.Itoa(int(debsize))
-	execnum := strconv.Itoa(appexec)
-	localnum := strconv.Itoa(applib)
-	outnum := strconv.Itoa(outlib)
-	err = excel.ExcelImpl.TotalSheet(common.TotalSheet, baseline, debname,
-		debversion, debarch, filesize, execnum, localnum, outnum)
+	filesize := strconv.Itoa(int(GlobalDebSize))
+	execnum := strconv.Itoa(GlobalAppExe)
+	localnum := strconv.Itoa(GlobalAppLib)
+	outnum := strconv.Itoa(GlobalOutLib)
+	GlobalRick = No
+	err = excel.ExcelImpl.TotalSheet(common.TotalSheet, GlobalDebName,
+		GlobalDebVersion, GlobalDebArch, filesize, execnum, localnum, outnum, GlobalRick, baseline)
 
 	return err
 }
 
 // 执行abi diff的详细操作
-func diffabi(wg *sync.WaitGroup, baselinefile, locso string, outso []string) {
+func diffabi(wg *sync.WaitGroup, mutex *sync.Mutex, baselinefile, locso string, outso []string) {
 	defer wg.Done()
 	mutex.Lock()
 	defer mutex.Unlock()
@@ -151,11 +159,15 @@ func diffabi(wg *sync.WaitGroup, baselinefile, locso string, outso []string) {
 	if err != nil {
 		fmt.Println("Failed to unmarshal config file")
 	}
-	switch debarch {
+	// fmt.Println("zzzzz", GlobalRickMap)
+	// 对应CPU架构的处理
+	switch GlobalDebArch {
 	case "i386":
 		for _, out := range outso {
 			so := strings.Split(out, " ")[0]
 			if common.ListContainersStr(so, config.I386.Change) {
+				GlobalRick = Yes
+				GlobalRickMap[sheetName] = Yes
 				change = Yes
 			} else {
 				change = No
@@ -172,19 +184,24 @@ func diffabi(wg *sync.WaitGroup, baselinefile, locso string, outso []string) {
 			}
 			var args []string
 			args = append(args, locso)
-			args = append(args, "本地so库")
-			args = append(args, so)
+			if strings.Contains(locso, ".so") {
+				args = append(args, "本地so库")
+			} else {
+				args = append(args, "本地文件")
+			}
+			args = append(args, strings.TrimSpace(so))
 			args = append(args, "外部so库")
-			args = append(args, nochange)
 			args = append(args, change)
 			args = append(args, notfound)
-			args = append(args, out)
+			args = append(args, strings.TrimSpace(out))
 			excel.ExcelImpl.AddRowInfo(sheetName, args)
 		}
 	case "amd64":
 		for _, out := range outso {
 			so := strings.Split(out, " ")[0]
 			if common.ListContainersStr(so, config.AMD64.Change) {
+				GlobalRick = Yes
+				GlobalRickMap[sheetName] = Yes
 				change = Yes
 			} else {
 				change = No
@@ -201,10 +218,13 @@ func diffabi(wg *sync.WaitGroup, baselinefile, locso string, outso []string) {
 			}
 			var args []string
 			args = append(args, locso)
-			args = append(args, "本地so库")
+			if strings.Contains(locso, ".so") {
+				args = append(args, "本地so库")
+			} else {
+				args = append(args, "本地文件")
+			}
 			args = append(args, strings.TrimSpace(so))
 			args = append(args, "外部so库")
-			args = append(args, nochange)
 			args = append(args, change)
 			args = append(args, notfound)
 			args = append(args, strings.TrimSpace(out))
@@ -214,6 +234,8 @@ func diffabi(wg *sync.WaitGroup, baselinefile, locso string, outso []string) {
 		for _, out := range outso {
 			so := strings.Split(out, " ")[0]
 			if common.ListContainersStr(so, config.ARM64.Change) {
+				GlobalRick = Yes
+				GlobalRickMap[sheetName] = Yes
 				change = Yes
 			} else {
 				change = No
@@ -230,19 +252,24 @@ func diffabi(wg *sync.WaitGroup, baselinefile, locso string, outso []string) {
 			}
 			var args []string
 			args = append(args, locso)
-			args = append(args, "本地so库")
-			args = append(args, so)
+			if strings.Contains(locso, ".so") {
+				args = append(args, "本地so库")
+			} else {
+				args = append(args, "本地文件")
+			}
+			args = append(args, strings.TrimSpace(so))
 			args = append(args, "外部so库")
-			args = append(args, nochange)
 			args = append(args, change)
 			args = append(args, notfound)
-			args = append(args, out)
+			args = append(args, strings.TrimSpace(out))
 			excel.ExcelImpl.AddRowInfo(sheetName, args)
 		}
 	case "sw_64":
 		for _, out := range outso {
 			so := strings.Split(out, " ")[0]
 			if common.ListContainersStr(so, config.SW_64.Change) {
+				GlobalRick = Yes
+				GlobalRickMap[sheetName] = Yes
 				change = Yes
 			} else {
 				change = No
@@ -259,19 +286,24 @@ func diffabi(wg *sync.WaitGroup, baselinefile, locso string, outso []string) {
 			}
 			var args []string
 			args = append(args, locso)
-			args = append(args, "本地so库")
-			args = append(args, so)
+			if strings.Contains(locso, ".so") {
+				args = append(args, "本地so库")
+			} else {
+				args = append(args, "本地文件")
+			}
+			args = append(args, strings.TrimSpace(so))
 			args = append(args, "外部so库")
-			args = append(args, nochange)
 			args = append(args, change)
 			args = append(args, notfound)
-			args = append(args, out)
+			args = append(args, strings.TrimSpace(out))
 			excel.ExcelImpl.AddRowInfo(sheetName, args)
 		}
 	case "loong64":
 		for _, out := range outso {
 			so := strings.Split(out, " ")[0]
 			if common.ListContainersStr(so, config.LOONG64.Change) {
+				GlobalRick = Yes
+				GlobalRickMap[sheetName] = Yes
 				change = Yes
 			} else {
 				change = No
@@ -288,19 +320,24 @@ func diffabi(wg *sync.WaitGroup, baselinefile, locso string, outso []string) {
 			}
 			var args []string
 			args = append(args, locso)
-			args = append(args, "本地so库")
-			args = append(args, so)
+			if strings.Contains(locso, ".so") {
+				args = append(args, "本地so库")
+			} else {
+				args = append(args, "本地文件")
+			}
+			args = append(args, strings.TrimSpace(so))
 			args = append(args, "外部so库")
-			args = append(args, nochange)
 			args = append(args, change)
 			args = append(args, notfound)
-			args = append(args, out)
+			args = append(args, strings.TrimSpace(out))
 			excel.ExcelImpl.AddRowInfo(sheetName, args)
 		}
 	case "loongarch64":
 		for _, out := range outso {
 			so := strings.Split(out, " ")[0]
 			if common.ListContainersStr(so, config.LOONGARCH64.Change) {
+				GlobalRick = Yes
+				GlobalRickMap[sheetName] = Yes
 				change = Yes
 			} else {
 				change = No
@@ -317,19 +354,24 @@ func diffabi(wg *sync.WaitGroup, baselinefile, locso string, outso []string) {
 			}
 			var args []string
 			args = append(args, locso)
-			args = append(args, "本地so库")
-			args = append(args, so)
+			if strings.Contains(locso, ".so") {
+				args = append(args, "本地so库")
+			} else {
+				args = append(args, "本地文件")
+			}
+			args = append(args, strings.TrimSpace(so))
 			args = append(args, "外部so库")
-			args = append(args, nochange)
 			args = append(args, change)
 			args = append(args, notfound)
-			args = append(args, out)
+			args = append(args, strings.TrimSpace(out))
 			excel.ExcelImpl.AddRowInfo(sheetName, args)
 		}
 	case "mips64":
 		for _, out := range outso {
 			so := strings.Split(out, " ")[0]
 			if common.ListContainersStr(so, config.MIPS64.Change) {
+				GlobalRick = Yes
+				GlobalRickMap[sheetName] = Yes
 				change = Yes
 			} else {
 				change = No
@@ -346,19 +388,24 @@ func diffabi(wg *sync.WaitGroup, baselinefile, locso string, outso []string) {
 			}
 			var args []string
 			args = append(args, locso)
-			args = append(args, "本地so库")
-			args = append(args, so)
+			if strings.Contains(locso, ".so") {
+				args = append(args, "本地so库")
+			} else {
+				args = append(args, "本地文件")
+			}
+			args = append(args, strings.TrimSpace(so))
 			args = append(args, "外部so库")
-			args = append(args, nochange)
 			args = append(args, change)
 			args = append(args, notfound)
-			args = append(args, out)
+			args = append(args, strings.TrimSpace(out))
 			excel.ExcelImpl.AddRowInfo(sheetName, args)
 		}
 	case "riscv64":
 		for _, out := range outso {
 			so := strings.Split(out, " ")[0]
 			if common.ListContainersStr(so, config.RISCV64.Change) {
+				GlobalRick = Yes
+				GlobalRickMap[sheetName] = Yes
 				change = Yes
 			} else {
 				change = No
@@ -375,78 +422,85 @@ func diffabi(wg *sync.WaitGroup, baselinefile, locso string, outso []string) {
 			}
 			var args []string
 			args = append(args, locso)
-			args = append(args, "本地so库")
-			args = append(args, so)
+			if strings.Contains(locso, ".so") {
+				args = append(args, "本地so库")
+			} else {
+				args = append(args, "本地文件")
+			}
+			args = append(args, strings.TrimSpace(so))
 			args = append(args, "外部so库")
-			args = append(args, nochange)
 			args = append(args, change)
 			args = append(args, notfound)
-			args = append(args, out)
+			args = append(args, strings.TrimSpace(out))
 			excel.ExcelImpl.AddRowInfo(sheetName, args)
 		}
 	}
 }
 
 // 执行并发多个基线文件处理的关联
-func libdo(wg *sync.WaitGroup, locso string, outso []string) {
-	defer wg.Done()
-	baselinefiles, err := utils.FileWalkDir(common.BaseLineDir)
-	if err != nil {
-		fmt.Printf("Not Found Base Line File, Shell Script Stop Error: %s", err)
-		return
-	}
+func libdo(baselinefile string) {
 	subwg := sync.WaitGroup{}
-	subwg.Add(len(baselinefiles))
-	for _, baselinefile := range baselinefiles {
-		baseline_sheet := strings.ReplaceAll(path.Base(baselinefile), ".json", "")
-		excel.ExcelImpl.NewExcelSheet(baseline_sheet)
-		go diffabi(&subwg, baselinefile, locso, outso)
+	subwg.Add(len(GlobalLibInfos))
+	submutex := sync.Mutex{}
+	for locso, outso := range GlobalLibInfos {
+		go diffabi(&subwg, &submutex, baselinefile, locso, outso)
 	}
 	subwg.Wait()
-
 }
 
 // 处理文件目录内容
 func handle_file() error {
 	fmt.Println("decompress deb file and app analysis handler...")
-	libinfo := make(map[string][]string)
-	err = utils.DecompressDeb(tempdirfile, tempdir)
+
+	err = utils.DecompressDeb(GlobalTempDirFile, GlobalTempDir)
 	if err != nil {
+		fmt.Printf("error decompressing %v", err)
 		return err
 	}
-	fileList, err := utils.FindFilePath(tempdir, "*.so")
+	fileList, err := utils.FindFilePath(GlobalTempDir, "*.so")
 	if err != nil {
+		fmt.Printf("error finding file list %v", err)
 		return err
 	}
-	applib = len(fileList)
-	soNum = make(map[string]uint8)
+	GlobalAppLib = len(fileList)
+
 	for _, val := range fileList {
 		so := path.Base(val)
-		fmt.Println(so)
+		// fmt.Println(so)
 		outs := ldd_file_handle(val)
-		libinfo[so] = outs
+		GlobalLibInfos[so] = outs
 	}
-	appexec, err := utils.FindDebExecutNum(tempdir)
-	if err != nil {
-		return err
+	GlobalAppExe, _ := utils.FindDebExecutFile(GlobalTempDir)
+	for _, val := range GlobalAppExe {
+		so := path.Base(val)
+		outs := ldd_file_handle(val)
+		GlobalLibInfos[so] = outs
 	}
-	fmt.Printf(`--------------------------------
+	fmt.Printf(`----------------------------------------
 App Lib File Number:   | %d
 App Exec File Number:  | %d
 App So File Number:    | %d
---------------------------------
-`, applib, appexec, outlib)
+----------------------------------------
+`, GlobalAppLib, len(GlobalAppExe), GlobalOutLib)
 
 	fmt.Println("app diff abi checking...")
-	err = excel_handler(appexec)
-	// 批量处理abi库比对
-	wg := sync.WaitGroup{}
-	wg.Add(applib)
-	for k, v := range libinfo {
-		go libdo(&wg, k, v)
+
+	err = excel_handler(len(GlobalAppExe))
+	baselinefiles, err := utils.FileWalkDir(common.BaseLineDir)
+	if err != nil {
+		fmt.Printf("Not Found Base Line File, Shell Script Stop Error: %s", err)
+		return err
 	}
-	wg.Wait()
-	utils.FileClean(tempdir)
+
+	// 批量处理abi库比对
+	for _, baselinefile := range baselinefiles {
+		baseline_sheet := strings.ReplaceAll(path.Base(baselinefile), ".json", "")
+		excel.ExcelImpl.NewExcelSheet(baseline_sheet)
+		GlobalRickMap[baseline_sheet] = No
+		libdo(baselinefile)
+	}
+
+	utils.FileClean(GlobalTempDir)
 
 	return err
 }
@@ -456,6 +510,8 @@ App So File Number:    | %d
 // @param fp软件包的对应目录
 // @return 返回检查执行过程中的错误
 func Appcheck(fp string) (err error) {
+
+	defer excel.ExcelImpl.Close()
 	fmt.Println(`ABI Check Compatibility Analysis Tool execution, Please wait for moment...`)
 	err = environment_check()
 	if err != nil {
@@ -463,11 +519,23 @@ func Appcheck(fp string) (err error) {
 	}
 	err = ready_work_directory(fp)
 	if err != nil {
+		fmt.Printf("Error: %v \n", err)
 		return
 	}
-	handle_file()
-	excel.ExcelImpl.Save("/home/uos/Downloads/test.xlsx")
-	fmt.Println("App Analysis ABI Check Complete. The Report File Path: /home/uos/Downloads/test.xlsx")
-	excel.ExcelImpl.Close()
+	err = handle_file()
+	if err != nil {
+		fmt.Printf("Error: %v \n", err)
+		return
+	}
+	path := utils.GetPWD()
+	rick := 0
+	// 兼容性风险最终结果更新
+	for k, v := range GlobalRickMap {
+		excel.ExcelImpl.UpdateRick(rick, common.TotalSheet, k, v)
+		rick += 1
+	}
+	name := strings.ReplaceAll(GlobalDebName, ".deb", "")
+	excel.ExcelImpl.Save(fmt.Sprintf("%s/%s.xlsx", path, name))
+	fmt.Println(fmt.Sprintf("App Analysis ABI Check Complete. The Report File Path: %s/%s.xlsx", path, name))
 	return
 }
