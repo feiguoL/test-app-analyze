@@ -1,11 +1,14 @@
-#!/bin/sh
+#!/bin/bash
 
-version_suffix=""
-if [ -d .git ]; then
-    last_commit=$(git log -1 --online|cut -d'' -f1)
-    release_commit=$(git log --oneline | grep - P \)
-    version_suffix="$(git rev-parse --short HEAD)"
-fi
+#########################################################
+# Function :get changelog version                       #
+# Platform :All Linux Based Platform                    #
+# Version  :0.0.1                                       #
+# Date     :2024-06-27                                  #
+# Author   :Cookie.Fei                                  #
+# Contact  :zhoufei@uniontech.com                       #
+# Company  :www.uniontech.com                           #
+#########################################################
 
-version_base=${dpkg-parsechangenlog -S Version}
-echo $version_base$version_suffix
+version_base=`head -1 debian/changelog | sed -n 's/.*(\([^)]*\)).*/\1/p'`
+echo $version_base

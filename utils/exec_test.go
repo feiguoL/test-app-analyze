@@ -24,11 +24,19 @@ func Test_excelinit(t *testing.T) {
 	if err != nil {
 		t.Error(err.Error())
 	}
-	err = excel.ExcelImpl.AddRowInfo(baseLineVersion, []string{"dwrite.so", "本地so库", "libc.so.6", "外部so库", "是", "否",
+	err = excel.ExcelImpl.AddRowInfo(baseLineVersion, []string{"dwrite.so", "本地so库", "libc.so.6", "外部so库", "No", "Yes",
 		"libc.so.6 => /lib/x86_64-linux-gnu/libc.so.6 (0x00007fd941a7d000)"})
-	err = excel.ExcelImpl.AddRowInfo(baseLineVersion, []string{"dwrite1.so", "本地so库", "libc.so.6", "外部so库", "Yes", "否",
+	err = excel.ExcelImpl.AddRowInfo(baseLineVersion, []string{"dwrite1.so", "本地so库", "libc.so.6", "外部so库", "Yes", "No",
 		"libc.so.6 => /lib/x86_64-linux-gnu/libc.so.6 (0x00007fd941a7d000)"})
-	err = excel.ExcelImpl.AddRowInfo(baseLineVersion, []string{"dwrite2.so", "本地so库", "libc.so.6", "外部so库", "否", "是",
+	err = excel.ExcelImpl.AddRowInfo(baseLineVersion, []string{"dwrite2.so", "本地so库", "libc.so.6", "外部so库", "No", "No",
+		"libc.so.6 => /lib/x86_64-linux-gnu/libc.so.6 (0x00007fd941a7d000)"})
+	err = excel.ExcelImpl.AddRowInfo(baseLineVersion, []string{"dwrite3.so", "本地so库", "libc.so.6", "外部so库", "Yes", "No",
+		"libc.so.6 => /lib/x86_64-linux-gnu/libc.so.6 (0x00007fd941a7d000)"})
+	err = excel.ExcelImpl.AddRowInfo(baseLineVersion, []string{"dwrite4.so", "本地so库", "libc.so.6", "外部so库", "No", "No",
+		"libc.so.6 => /lib/x86_64-linux-gnu/libc.so.6 (0x00007fd941a7d000)"})
+	err = excel.ExcelImpl.AddRowInfo(baseLineVersion, []string{"dwrite5.so", "本地so库", "libc.so.6", "外部so库", "No", "No",
+		"libc.so.6 => /lib/x86_64-linux-gnu/libc.so.6 (0x00007fd941a7d000)"})
+	err = excel.ExcelImpl.AddRowInfo(baseLineVersion, []string{"dwrite6.so", "本地so库", "libc.so.6", "外部so库", "Yes", "No",
 		"libc.so.6 => /lib/x86_64-linux-gnu/libc.so.6 (0x00007fd941a7d000)"})
 	err = excel.ExcelImpl.Save("/home/uos/Downloads/test.xlsx")
 	if err != nil {

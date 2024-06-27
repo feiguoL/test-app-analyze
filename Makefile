@@ -4,7 +4,7 @@
 PREFIX := /usr
 PACKAGE_NAME := deepin-app-analyze
 PACKAGE_BINARY := app-analyze
-PACKAGE_VERSION := 0.0.1
+PACKAGE_VERSION := $(shell scripts/version.sh)
 PACKAGE_MAINTAINER := Zhou Fei <zhoufei@uniontech.com>
 GOPKG_PREFIX := github.com/spf13/cobra
 TEMP_FILE := /tmp/gocache

@@ -4,6 +4,8 @@ import (
 	"fmt"
 )
 
+const FirstRow = 2
+
 // 首页概览数据
 func (e *excelImpl) TotalSheet(sheetName, pkgName, pkgVersion, pkgArch,
 	pkgSize, execNum, applib, outlib, rick, baseLineVersion string) (err error) {
@@ -51,7 +53,7 @@ func (e *excelImpl) FirstLineInited(sheetName string) (err error) {
 		"C1": "依赖外部库",
 		"D1": "外部库的类型",
 		"E1": "是否存在abi变化",
-		"F1": "是否不在基线范围内",
+		"F1": "在基线范围内",
 		"G1": "详细信息",
 	}
 	e.excelFile.SetColWidth(sheetName, "A", "F", 18)
@@ -66,15 +68,18 @@ func (e *excelImpl) FirstLineInited(sheetName string) (err error) {
 // 在对应页签新增一条数据
 func (e *excelImpl) AddRowInfo(sheetName string, args []string) (err error) {
 	line := SheetLines[sheetName] + 1
+	if args[4] == "Yes" {
+		e.excelFile.InsertRow(sheetName, FirstRow)
+		line = FirstRow
+		style := e.GetRedColor()
+		e.excelFile.SetCellStyle(sheetName, fmt.Sprintf("E%d", line), fmt.Sprintf("E%d", line), style)
+	}
 	err = e.excelFile.SetCellStr(sheetName, fmt.Sprintf("A%d", line), args[0])
 	err = e.excelFile.SetCellStr(sheetName, fmt.Sprintf("B%d", line), args[1])
 	err = e.excelFile.SetCellStr(sheetName, fmt.Sprintf("C%d", line), args[2])
 	err = e.excelFile.SetCellStr(sheetName, fmt.Sprintf("D%d", line), args[3])
 	err = e.excelFile.SetCellStr(sheetName, fmt.Sprintf("E%d", line), args[4])
-	if args[4] == "Yes" {
-		style := e.GetRedColor()
-		e.excelFile.SetCellStyle(sheetName, fmt.Sprintf("E%d", line), fmt.Sprintf("E%d", line), style)
-	}
+
 	err = e.excelFile.SetCellStr(sheetName, fmt.Sprintf("F%d", line), args[5])
 	err = e.excelFile.SetCellStr(sheetName, fmt.Sprintf("G%d", line), args[6])
 	SheetLines[sheetName] += 1
@@ -96,5 +101,10 @@ func (e *excelImpl) UpdateRick(idx int, TotalName, sheetVersion, rick string) (e
 		err = e.excelFile.SetCellStr(TotalName, fmt.Sprintf("%s9", char), "否")
 	}
 	err = e.excelFile.SetCellStr(TotalName, fmt.Sprintf("%s10", char), sheetVersion)
+	return
+}
+
+func (e *excelImpl) InsertFirstRot(sheetName string) (err error) {
+	e.excelFile.InsertRow(sheetName, 2)
 	return
 }

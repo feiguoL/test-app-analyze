@@ -13,8 +13,12 @@ import (
 )
 
 const (
-	Yes = "Yes"
-	No  = "No"
+	Yes        = "Yes"
+	No         = "No"
+	LocalSo    = "本地so库"
+	LocalFile  = "本地文件"
+	OutSo      = "外部库"
+	OutLocalSo = "本地库"
 )
 
 var (
@@ -178,22 +182,27 @@ func diffabi(wg *sync.WaitGroup, mutex *sync.Mutex, baselinefile, locso string, 
 				nochange = No
 			}
 			if change == No && nochange == No {
-				notfound = Yes
-			} else {
 				notfound = No
+			} else {
+				notfound = Yes
 			}
 			var args []string
 			args = append(args, locso)
 			if strings.Contains(locso, ".so") {
-				args = append(args, "本地so库")
+				args = append(args, LocalSo)
 			} else {
-				args = append(args, "本地文件")
+				args = append(args, LocalFile)
 			}
 			args = append(args, strings.TrimSpace(so))
-			args = append(args, "外部so库")
+			out = strings.TrimSpace(out)
+			if strings.Contains(out, "/lib/") {
+				args = append(args, OutSo)
+			} else {
+				args = append(args, OutLocalSo)
+			}
 			args = append(args, change)
 			args = append(args, notfound)
-			args = append(args, strings.TrimSpace(out))
+			args = append(args, out)
 			excel.ExcelImpl.AddRowInfo(sheetName, args)
 		}
 	case "amd64":
@@ -212,22 +221,27 @@ func diffabi(wg *sync.WaitGroup, mutex *sync.Mutex, baselinefile, locso string, 
 				nochange = No
 			}
 			if change == No && nochange == No {
-				notfound = Yes
-			} else {
 				notfound = No
+			} else {
+				notfound = Yes
 			}
 			var args []string
 			args = append(args, locso)
 			if strings.Contains(locso, ".so") {
-				args = append(args, "本地so库")
+				args = append(args, LocalSo)
 			} else {
-				args = append(args, "本地文件")
+				args = append(args, LocalFile)
 			}
 			args = append(args, strings.TrimSpace(so))
-			args = append(args, "外部so库")
+			out = strings.TrimSpace(out)
+			if strings.Contains(out, "/lib/") {
+				args = append(args, OutSo)
+			} else {
+				args = append(args, OutLocalSo)
+			}
 			args = append(args, change)
 			args = append(args, notfound)
-			args = append(args, strings.TrimSpace(out))
+			args = append(args, out)
 			excel.ExcelImpl.AddRowInfo(sheetName, args)
 		}
 	case "arm64":
@@ -246,22 +260,27 @@ func diffabi(wg *sync.WaitGroup, mutex *sync.Mutex, baselinefile, locso string, 
 				nochange = No
 			}
 			if change == No && nochange == No {
-				notfound = Yes
-			} else {
 				notfound = No
+			} else {
+				notfound = Yes
 			}
 			var args []string
 			args = append(args, locso)
 			if strings.Contains(locso, ".so") {
-				args = append(args, "本地so库")
+				args = append(args, LocalSo)
 			} else {
-				args = append(args, "本地文件")
+				args = append(args, LocalFile)
 			}
 			args = append(args, strings.TrimSpace(so))
-			args = append(args, "外部so库")
+			out = strings.TrimSpace(out)
+			if strings.Contains(out, "/lib/") {
+				args = append(args, OutSo)
+			} else {
+				args = append(args, OutLocalSo)
+			}
 			args = append(args, change)
 			args = append(args, notfound)
-			args = append(args, strings.TrimSpace(out))
+			args = append(args, out)
 			excel.ExcelImpl.AddRowInfo(sheetName, args)
 		}
 	case "sw_64":
@@ -280,22 +299,27 @@ func diffabi(wg *sync.WaitGroup, mutex *sync.Mutex, baselinefile, locso string, 
 				nochange = No
 			}
 			if change == No && nochange == No {
-				notfound = Yes
-			} else {
 				notfound = No
+			} else {
+				notfound = Yes
 			}
 			var args []string
 			args = append(args, locso)
 			if strings.Contains(locso, ".so") {
-				args = append(args, "本地so库")
+				args = append(args, LocalSo)
 			} else {
-				args = append(args, "本地文件")
+				args = append(args, LocalFile)
 			}
 			args = append(args, strings.TrimSpace(so))
-			args = append(args, "外部so库")
+			out = strings.TrimSpace(out)
+			if strings.Contains(out, "/lib/") {
+				args = append(args, OutSo)
+			} else {
+				args = append(args, OutLocalSo)
+			}
 			args = append(args, change)
 			args = append(args, notfound)
-			args = append(args, strings.TrimSpace(out))
+			args = append(args, out)
 			excel.ExcelImpl.AddRowInfo(sheetName, args)
 		}
 	case "loong64":
@@ -314,22 +338,27 @@ func diffabi(wg *sync.WaitGroup, mutex *sync.Mutex, baselinefile, locso string, 
 				nochange = No
 			}
 			if change == No && nochange == No {
-				notfound = Yes
-			} else {
 				notfound = No
+			} else {
+				notfound = Yes
 			}
 			var args []string
 			args = append(args, locso)
 			if strings.Contains(locso, ".so") {
-				args = append(args, "本地so库")
+				args = append(args, LocalSo)
 			} else {
-				args = append(args, "本地文件")
+				args = append(args, LocalFile)
 			}
 			args = append(args, strings.TrimSpace(so))
-			args = append(args, "外部so库")
+			out = strings.TrimSpace(out)
+			if strings.Contains(out, "/lib/") {
+				args = append(args, OutSo)
+			} else {
+				args = append(args, OutLocalSo)
+			}
 			args = append(args, change)
 			args = append(args, notfound)
-			args = append(args, strings.TrimSpace(out))
+			args = append(args, out)
 			excel.ExcelImpl.AddRowInfo(sheetName, args)
 		}
 	case "loongarch64":
@@ -348,22 +377,27 @@ func diffabi(wg *sync.WaitGroup, mutex *sync.Mutex, baselinefile, locso string, 
 				nochange = No
 			}
 			if change == No && nochange == No {
-				notfound = Yes
-			} else {
 				notfound = No
+			} else {
+				notfound = Yes
 			}
 			var args []string
 			args = append(args, locso)
 			if strings.Contains(locso, ".so") {
-				args = append(args, "本地so库")
+				args = append(args, LocalSo)
 			} else {
-				args = append(args, "本地文件")
+				args = append(args, LocalFile)
 			}
 			args = append(args, strings.TrimSpace(so))
-			args = append(args, "外部so库")
+			out = strings.TrimSpace(out)
+			if strings.Contains(out, "/lib/") {
+				args = append(args, OutSo)
+			} else {
+				args = append(args, OutLocalSo)
+			}
 			args = append(args, change)
 			args = append(args, notfound)
-			args = append(args, strings.TrimSpace(out))
+			args = append(args, out)
 			excel.ExcelImpl.AddRowInfo(sheetName, args)
 		}
 	case "mips64":
@@ -382,22 +416,27 @@ func diffabi(wg *sync.WaitGroup, mutex *sync.Mutex, baselinefile, locso string, 
 				nochange = No
 			}
 			if change == No && nochange == No {
-				notfound = Yes
-			} else {
 				notfound = No
+			} else {
+				notfound = Yes
 			}
 			var args []string
 			args = append(args, locso)
 			if strings.Contains(locso, ".so") {
-				args = append(args, "本地so库")
+				args = append(args, LocalSo)
 			} else {
-				args = append(args, "本地文件")
+				args = append(args, LocalFile)
 			}
 			args = append(args, strings.TrimSpace(so))
-			args = append(args, "外部so库")
+			out = strings.TrimSpace(out)
+			if strings.Contains(out, "/lib/") {
+				args = append(args, OutSo)
+			} else {
+				args = append(args, OutLocalSo)
+			}
 			args = append(args, change)
 			args = append(args, notfound)
-			args = append(args, strings.TrimSpace(out))
+			args = append(args, out)
 			excel.ExcelImpl.AddRowInfo(sheetName, args)
 		}
 	case "riscv64":
@@ -416,22 +455,27 @@ func diffabi(wg *sync.WaitGroup, mutex *sync.Mutex, baselinefile, locso string, 
 				nochange = No
 			}
 			if change == No && nochange == No {
-				notfound = Yes
-			} else {
 				notfound = No
+			} else {
+				notfound = Yes
 			}
 			var args []string
 			args = append(args, locso)
 			if strings.Contains(locso, ".so") {
-				args = append(args, "本地so库")
+				args = append(args, LocalSo)
 			} else {
-				args = append(args, "本地文件")
+				args = append(args, LocalFile)
 			}
 			args = append(args, strings.TrimSpace(so))
-			args = append(args, "外部so库")
+			out = strings.TrimSpace(out)
+			if strings.Contains(out, "/lib/") {
+				args = append(args, OutSo)
+			} else {
+				args = append(args, OutLocalSo)
+			}
 			args = append(args, change)
 			args = append(args, notfound)
-			args = append(args, strings.TrimSpace(out))
+			args = append(args, out)
 			excel.ExcelImpl.AddRowInfo(sheetName, args)
 		}
 	}
