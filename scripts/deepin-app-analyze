@@ -12,6 +12,7 @@
 
 
 args="$1"
+baselines="$@"
 
 # 定义帮助信息函数
 help_command() {
@@ -19,6 +20,7 @@ help_command() {
     echo
     echo "Options:"
     echo "  -h, --help         display this help message"
+    echo "  -l, --list         show baseline version list"
     echo "  -v, --version      display script version"
     echo "  -e, --example      display how to use tool"
     # 添加其他选项的帮助信息
@@ -38,11 +40,27 @@ case $args in
         echo "Version 1.0"
         exit 0
         ;;
+    -l | --list)
+        app-analyze appcheck --list
+        exit 0
+        ;;
     -e  | --example )
         echo "Usage: "
-        echo "  deepin-app-analyze {filepath.deb}"
+        echo "  default:"
+        echo "    deepin-app-analyze {filepath.deb}"
+        echo "    deepin-app-analyze /home/uos/Downloads/apt_1.8.2.11-1+dde_amd64.deb"
+        echo "  for one version:"
+        echo "    deepin-app-analyze {filepath.deb} {current-version_update-version}"
+        echo "    deepin-app-analyze /home/uos/Downloads/apt_1.8.2.11-1+dde_amd64.deb 1050_1051"
+        echo "  for multiple versions:"
+        echo "    deepin-app-analyze {filepath.deb} {current-version_update-version} {current-version_update-version}"
+        echo "    deepin-app-analyze /home/uos/Downloads/apt_1.8.2.11-1+dde_amd64.deb 1050_1051 1051_1052"
         exit 0
         ;;
 esac
 
-app-analyze appcheck -f $args
+if [ $# -eq 1 ]; then
+    app-analyze appcheck -f $args
+else
+    app-analyze appcheck -f $args -b "$baselines"
+fi

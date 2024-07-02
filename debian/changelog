@@ -1,3 +1,9 @@
+deepin-app-analyze (0.0.1-4) unstable; urgency=medium
+
+  *  Add flag baseline version and remove excel (=> not found)
+
+ -- ZhouFei <zhoufei@uniontech.com>  Tue, 02 Jul 2024 13:08:15 +0800
+
 deepin-app-analyze (0.0.1-3) unstable; urgency=medium
 
   * Modify excel field and add new baseline json

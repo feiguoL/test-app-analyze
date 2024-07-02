@@ -1,6 +1,6 @@
 package common
 
-var Archs = []string{"x86_64", "aarch64", "i386", "amd64", "arm64", "sw_64", "mips64", "loong64", "loongarch64", "sw_64"}
+var Archs = []string{"x86_64", "aarch64", "i386", "amd64", "arm64", "sw_64", "mips64", "mips64el", "loong64", "loongarch64", "sw_64"}
 
 const (
 	TotalSheet    = "总览"                                // excel首页
@@ -41,6 +41,7 @@ type Config struct {
 	LOONGARCH64 Changed `json:"loongarch64"`
 	MIPS        Changed `json:"mips"`
 	MIPS64      Changed `json:"mips64"`
+	MIPS64EL    Changed `json:"mips64el"`
 	MIPSEL      Changed `json:"mipsel"`
 	MIPSEL64    Changed `json:"mipsel64"`
 	RISCV64     Changed `json:"riscv64"`

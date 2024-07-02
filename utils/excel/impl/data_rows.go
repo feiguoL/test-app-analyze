@@ -52,11 +52,12 @@ func (e *excelImpl) FirstLineInited(sheetName string) (err error) {
 		"B1": "类型",
 		"C1": "依赖外部库",
 		"D1": "外部库的类型",
-		"E1": "是否存在abi变化",
-		"F1": "在基线范围内",
+		"E1": "是否存在abi变化(Yes表示存在变化/No表示不存在表化)",
+		"F1": "在基线范围内(Yes标识在基线内/No标识不在基线内)",
 		"G1": "详细信息",
 	}
-	e.excelFile.SetColWidth(sheetName, "A", "F", 18)
+	e.excelFile.SetColWidth(sheetName, "A", "D", 18)
+	e.excelFile.SetColWidth(sheetName, "E", "F", 25)
 	e.excelFile.SetColWidth(sheetName, "G", "G", 100)
 	SheetLines[sheetName] += 1
 	for idx, line := range oneLine {

@@ -15,6 +15,7 @@ import (
 const (
 	Yes        = "Yes"
 	No         = "No"
+	Null       = "/"
 	LocalSo    = "本地so库"
 	LocalFile  = "本地文件"
 	OutSo      = "外部库"
@@ -24,6 +25,7 @@ const (
 var (
 	err error // 默认错误信息
 	// 全局环境变量
+	GlobalBaseLine    []string            // 指定基线版本
 	GlobalTempDir     string              // 临时目录
 	GlobalTempDirFile string              // 临时目录文件
 	GlobalArch        string              // 架构名称
@@ -122,6 +124,21 @@ func ldd_file_handle(fp string) []string {
 	return outs
 }
 
+func Get_baseline_files() (string, error) {
+	var result string
+	baseLineFiles, err := utils.FileWalkDir(common.BaseLineDir)
+	if err != nil {
+		return "", err
+	}
+	if len(baseLineFiles) == 0 {
+		return "", fmt.Errorf("no baseline files found")
+	}
+	for _, filePath := range baseLineFiles {
+		result += fmt.Sprintf("    %s\n", strings.ReplaceAll(path.Base(filePath), ".json", ""))
+	}
+	return result, nil
+}
+
 // excel的初始化总览数据
 func excel_handler(GlobalAppExe int) error {
 	var baseline string
@@ -200,6 +217,11 @@ func diffabi(wg *sync.WaitGroup, mutex *sync.Mutex, baselinefile, locso string, 
 			} else {
 				args = append(args, OutLocalSo)
 			}
+			if strings.Contains(out, "=> not found") {
+				out = strings.ReplaceAll(out, " => not found", "")
+				change = Null
+				notfound = Null
+			}
 			args = append(args, change)
 			args = append(args, notfound)
 			args = append(args, out)
@@ -238,6 +260,11 @@ func diffabi(wg *sync.WaitGroup, mutex *sync.Mutex, baselinefile, locso string, 
 				args = append(args, OutSo)
 			} else {
 				args = append(args, OutLocalSo)
+			}
+			if strings.Contains(out, "=> not found") {
+				out = strings.ReplaceAll(out, " => not found", "")
+				change = Null
+				notfound = Null
 			}
 			args = append(args, change)
 			args = append(args, notfound)
@@ -278,6 +305,11 @@ func diffabi(wg *sync.WaitGroup, mutex *sync.Mutex, baselinefile, locso string, 
 			} else {
 				args = append(args, OutLocalSo)
 			}
+			if strings.Contains(out, "=> not found") {
+				out = strings.ReplaceAll(out, " => not found", "")
+				change = Null
+				notfound = Null
+			}
 			args = append(args, change)
 			args = append(args, notfound)
 			args = append(args, out)
@@ -316,6 +348,11 @@ func diffabi(wg *sync.WaitGroup, mutex *sync.Mutex, baselinefile, locso string, 
 				args = append(args, OutSo)
 			} else {
 				args = append(args, OutLocalSo)
+			}
+			if strings.Contains(out, "=> not found") {
+				out = strings.ReplaceAll(out, " => not found", "")
+				change = Null
+				notfound = Null
 			}
 			args = append(args, change)
 			args = append(args, notfound)
@@ -356,6 +393,11 @@ func diffabi(wg *sync.WaitGroup, mutex *sync.Mutex, baselinefile, locso string, 
 			} else {
 				args = append(args, OutLocalSo)
 			}
+			if strings.Contains(out, "=> not found") {
+				out = strings.ReplaceAll(out, " => not found", "")
+				change = Null
+				notfound = Null
+			}
 			args = append(args, change)
 			args = append(args, notfound)
 			args = append(args, out)
@@ -395,12 +437,17 @@ func diffabi(wg *sync.WaitGroup, mutex *sync.Mutex, baselinefile, locso string, 
 			} else {
 				args = append(args, OutLocalSo)
 			}
+			if strings.Contains(out, "=> not found") {
+				out = strings.ReplaceAll(out, " => not found", "")
+				change = Null
+				notfound = Null
+			}
 			args = append(args, change)
 			args = append(args, notfound)
 			args = append(args, out)
 			excel.ExcelImpl.AddRowInfo(sheetName, args)
 		}
-	case "mips64":
+	case "mips64el":
 		for _, out := range outso {
 			so := strings.Split(out, " ")[0]
 			if common.ListContainersStr(so, config.MIPS64.Change) {
@@ -433,6 +480,11 @@ func diffabi(wg *sync.WaitGroup, mutex *sync.Mutex, baselinefile, locso string, 
 				args = append(args, OutSo)
 			} else {
 				args = append(args, OutLocalSo)
+			}
+			if strings.Contains(out, "=> not found") {
+				out = strings.ReplaceAll(out, " => not found", "")
+				change = Null
+				notfound = Null
 			}
 			args = append(args, change)
 			args = append(args, notfound)
@@ -472,6 +524,11 @@ func diffabi(wg *sync.WaitGroup, mutex *sync.Mutex, baselinefile, locso string, 
 				args = append(args, OutSo)
 			} else {
 				args = append(args, OutLocalSo)
+			}
+			if strings.Contains(out, "=> not found") {
+				out = strings.ReplaceAll(out, " => not found", "")
+				change = Null
+				notfound = Null
 			}
 			args = append(args, change)
 			args = append(args, notfound)
@@ -539,11 +596,24 @@ App So File Number:    | %d
 	// 批量处理abi库比对
 	for _, baselinefile := range baselinefiles {
 		baseline_sheet := strings.ReplaceAll(path.Base(baselinefile), ".json", "")
-		excel.ExcelImpl.NewExcelSheet(baseline_sheet)
-		GlobalRickMap[baseline_sheet] = No
-		libdo(baselinefile)
+		if len(GlobalBaseLine) > 0 {
+			if common.ListContainersStr(baseline_sheet, GlobalBaseLine) {
+				GlobalRickMap[baseline_sheet] = No
+				excel.ExcelImpl.NewExcelSheet(baseline_sheet)
+				fmt.Println("check baseline version: ", baseline_sheet)
+				libdo(baselinefile)
+			} else {
+				err = fmt.Errorf("Not Found baseline version, Please recheck your input version !!!")
+				goto OUTRUN
+			}
+		} else {
+			GlobalRickMap[baseline_sheet] = No
+			excel.ExcelImpl.NewExcelSheet(baseline_sheet)
+			fmt.Println("check baseline version: ", baseline_sheet)
+			libdo(baselinefile)
+		}
 	}
-
+OUTRUN:
 	utils.FileClean(GlobalTempDir)
 
 	return err
@@ -553,8 +623,8 @@ App So File Number:    | %d
 // @description 运行app兼容性的主服务逻辑
 // @param fp软件包的对应目录
 // @return 返回检查执行过程中的错误
-func Appcheck(fp string) (err error) {
-
+func Appcheck(fp string, baseline_list []string) (err error) {
+	GlobalBaseLine = baseline_list
 	defer excel.ExcelImpl.Close()
 	fmt.Println(`ABI Check Compatibility Analysis Tool execution, Please wait for moment...`)
 	err = environment_check()
