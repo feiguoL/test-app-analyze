@@ -592,7 +592,6 @@ App So File Number:    | %d
 		fmt.Printf("Not Found Base Line File, Shell Script Stop Error: %s", err)
 		return err
 	}
-
 	// 批量处理abi库比对
 	for _, baselinefile := range baselinefiles {
 		baseline_sheet := strings.ReplaceAll(path.Base(baselinefile), ".json", "")
@@ -602,9 +601,6 @@ App So File Number:    | %d
 				excel.ExcelImpl.NewExcelSheet(baseline_sheet)
 				fmt.Println("check baseline version: ", baseline_sheet)
 				libdo(baselinefile)
-			} else {
-				err = fmt.Errorf("Not Found baseline version, Please recheck your input version !!!")
-				goto OUTRUN
 			}
 		} else {
 			GlobalRickMap[baseline_sheet] = No
@@ -613,7 +609,6 @@ App So File Number:    | %d
 			libdo(baselinefile)
 		}
 	}
-OUTRUN:
 	utils.FileClean(GlobalTempDir)
 
 	return err
